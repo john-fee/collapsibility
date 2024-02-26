@@ -9,10 +9,11 @@ set.seed(1)
 
 cov_matrix = matrix(
   c(
-    4,2,2,4
+    4,0,0,4
   ),
   nrow = 2,
-  ncol = 2
+  ncol = 2,
+  byrow = TRUE
 )
 
 simulate_dataset <- function(n,sigma,y_formula){
@@ -58,10 +59,10 @@ fit_models <- function(nested_sim_data,model_formula){
 }
 
 results <- simulate_multiple_datasets(
-  n = 1000,
+  n = 100,
   sigma = cov_matrix,
   y_formula = 3*W + X + 1.5*Z,
-  n_simulations = 1000
+  n_simulations = 5000
 ) %>%
   fit_models(model_formula = W + X + Z)
 
@@ -84,18 +85,19 @@ coef_df <- results %>%
   left_join(
     data.frame(
       parameter = c("(Intercept)","X","Z","W"),
-      true_value = c(0,1.5,1,3)
+      true_value = c(0,1,1.5,3)
     ),
     by = "parameter"
   )
+
 coef_df %>%
   ggplot(aes(x = estimate,y = parameter,fill = parameter)) +
-  geom_boxplot() +
+  geom_boxplot(outliers = FALSE) +
   geom_point(aes(x = true_value,color = "True value of parameter"),shape = 23,fill = "red",size = 3) +
   scale_color_manual(name = "",values = c("True value of parameter" = "red")) +
   scale_fill_brewer(name = "Parameters",type = "qual",palette = 3) +
   #geom_vline(aes(xintercept = true_value),color = "red",linetype = "dashed") +
-  scale_x_continuous(name = "Estimates",breaks = seq(0,12,2),limits = c(-1,15)) +
+  scale_x_continuous(name = "Estimates") +
   labs(
     y = "Parameters",
     title = "Distribution of logistic regression parameter estimates \nfit on data simulated from the same model",
