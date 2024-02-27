@@ -1,7 +1,7 @@
 Simulating collapsibility
 ================
 John Fee
-2024-02-26
+2024-02-27
 
 ``` r
 # I/O
@@ -89,8 +89,7 @@ results <- simulate_multiple_datasets(
   epsilon_sd = 9
 ) %>%
   mutate(
-      fitted_model = map(data,~ lm(Y ~ X + Z + W,data = .x)),
-      predicted_value = map2(.x = data,.y = fitted_model,.f = ~ predict(.y))
+      fitted_model = map(data,~ lm(Y ~ X + Z + W,data = .x))
     )
 ```
 
@@ -103,7 +102,8 @@ coef_df <- data.frame(
 
 plot_coefficient_distribution(
   coef_df,
-  title = "Distribution of linear regression parameter estimates \nfit on data simulated from the same linear model")
+  title = "Distribution of linear regression parameter estimates \nfit on data simulated from the same linear model"
+  )
 ```
 
 <img src="Simulating-Collapsibility_files/figure-gfm/unnamed-chunk-4-1.png" style="display: block; margin: auto;" />
@@ -130,3 +130,148 @@ of the simulated parameter distributions, but they would remain
 unbiased. What if we have a more complicated dependency structure?
 
 ## Scenario 2 - Confounders present
+
+Let’s take the same setup as scenario 1, but instead $X$ and $Y$ both
+depend on $Z$.
+
+``` r
+dagify(
+  Y ~ X,
+  Y ~ W,
+  Y ~ Z,
+  X ~ Z
+) %>%
+  ggdag() +
+  theme_void()
+```
+
+<img src="Simulating-Collapsibility_files/figure-gfm/unnamed-chunk-6-1.png" style="display: block; margin: auto;" />
+
+It is sufficient to condition on $X$ and $Z$ to recover the correct
+coefficient for $X$. Let’s simulate the data and model fitting and check
+that this this true.
+
+``` r
+cov_matrix_diagonal <- matrix(
+  c(
+    4,0,0,
+    0,4,3,
+    0,3,4
+  ),
+  nrow = 3,
+  ncol = 3,
+  byrow = TRUE
+)
+
+results <- simulate_multiple_datasets(
+  n = 500,
+  sigma = cov_matrix_diagonal,
+  y_formula = 3*W + X + 1.5*Z,
+  n_simulations = 1000,
+  x_threshold = qnorm(0.5), # Chosen so X is a 50/50 split in both treatment groups
+  epsilon_sd = 9
+) %>%
+  mutate(
+      fitted_model = map(data,~ lm(Y ~ X + Z + W,data = .x))
+    )
+```
+
+``` r
+coef_df <- data.frame(
+  parameter = c("(Intercept)","X","Z","W"),
+  true_value = c(0,1,1.5,3)
+  ) %>%
+  get_coef_df(results,.)
+
+plot_coefficient_distribution(
+  coef_df,
+  title = "Distribution of linear regression parameter estimates \nfit on data simulated from the same linear model"
+  )
+```
+
+<img src="Simulating-Collapsibility_files/figure-gfm/unnamed-chunk-8-1.png" style="display: block; margin: auto;" />
+
+``` r
+coef_df %>%
+  summarize_coef_df(caption = "Summary table for parameters of $n = 1000$ linear models fit on simulated data with confounder")
+```
+
+| Variable    | Parameter estimate | True value |       Bias |
+|:------------|-------------------:|-----------:|-----------:|
+| (Intercept) |          0.0333366 |        0.0 |  0.0333366 |
+| W           |          2.9993847 |        3.0 | -0.0006153 |
+| X           |          0.9296940 |        1.0 | -0.0703060 |
+| Z           |          1.5169205 |        1.5 |  0.0169205 |
+
+Summary table for parameters of $n = 1000$ linear models fit on
+simulated data with confounder
+
+The above simulation matches with our supposition that conditioning on
+$Z$ will provide unbiased estimates of the coefficient for $X$. Note
+that the variance of the estimate for $X$ is larger than in scenario 1,
+when $X$ and $Z$ were uncorrelated (this is expected). Now what happens
+if we remove $W$, a prognostic variable, from the model we fit, but
+*not* the DGP?
+
+## Scenario 3 - Confounders present, prognostic variable omitted
+
+``` r
+cov_matrix_diagonal <- matrix(
+  c(
+    4,0,0,
+    0,4,3,
+    0,3,4
+  ),
+  nrow = 3,
+  ncol = 3,
+  byrow = TRUE
+)
+
+results <- simulate_multiple_datasets(
+  n = 500,
+  sigma = cov_matrix_diagonal,
+  y_formula = 3*W + X + 1.5*Z,
+  n_simulations = 1000,
+  x_threshold = qnorm(0.5), # Chosen so X is a 50/50 split in both treatment groups
+  epsilon_sd = 9
+) %>%
+  mutate(
+      fitted_model = map(data,~ lm(Y ~ X + Z,data = .x))
+    )
+```
+
+``` r
+coef_df <- data.frame(
+  parameter = c("(Intercept)","X","Z","W"),
+  true_value = c(0,1,1.5,3)
+  ) %>%
+  get_coef_df(results,.)
+
+plot_coefficient_distribution(
+  coef_df,
+  title = "Distribution of linear regression parameter estimates \nfit on data simulated from a model missing a prognostic variable"
+  ) +
+  lims(x = c(-2.5,5))
+```
+
+<img src="Simulating-Collapsibility_files/figure-gfm/unnamed-chunk-11-1.png" style="display: block; margin: auto;" />
+
+``` r
+coef_df %>%
+  summarize_coef_df(caption = "Summary table for parameters of $n = 1000$ linear models fit on simulated data with confounder present and prognostic variable omitted")
+```
+
+| Variable    | Parameter estimate | True value |       Bias |
+|:------------|-------------------:|-----------:|-----------:|
+| (Intercept) |         -0.0118844 |        0.0 | -0.0118844 |
+| X           |          1.0254737 |        1.0 |  0.0254737 |
+| Z           |          1.4841530 |        1.5 | -0.0158470 |
+
+Summary table for parameters of $n = 1000$ linear models fit on
+simulated data with confounder present and prognostic variable omitted
+
+Coefficient for $X$ remains unbiased, even though prognostic variable
+$W$ is removed. This is a property exclusive to regression with identity
+and log link functions, as we shall see in the following sections.
+
+# A (non identity/log link) GLM - logistic regression
