@@ -3,6 +3,15 @@ Simulating collapsibility
 John Fee
 2024-02-27
 
+- [A linear model](#a-linear-model)
+  - [Scenario 1 - No confounders](#scenario-1---no-confounders)
+  - [Scenario 2 - Confounders
+    present](#scenario-2---confounders-present)
+  - [Scenario 3 - Confounders present, prognostic variable
+    omitted](#scenario-3---confounders-present-prognostic-variable-omitted)
+- [A (non identity/log link) GLM - logistic
+  regression](#a-non-identitylog-link-glm---logistic-regression)
+
 ``` r
 # I/O
 library(here)

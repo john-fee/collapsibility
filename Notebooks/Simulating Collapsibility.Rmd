@@ -2,7 +2,10 @@
 title: "Simulating collapsibility"
 author: "John Fee"
 date: "`r Sys.Date()`"
-output: github_document
+output: 
+  github_document:
+    toc: true
+    toc_depth: 2
 ---
 
 ```{r setup, include=FALSE}
