@@ -23,25 +23,36 @@ simulate_linear_model <- function(n,sigma,y_formula,x_threshold,epsilon_sd){
     )
 }
 
-simulate_multiple_datasets <- function(n,sigma,y_formula,n_simulations,x_threshold,epsilon_sd = 1){
+simulate_logistic_reg_model <- function(n,sigma,y_formula,x_threshold){
+  simulate_predictors(
+    n = n,
+    sigma = sigma,
+    x_threshold = x_threshold
+  ) %>%
+    mutate(
+      linear_combination = {{y_formula}},
+      Y_probs = plogis(linear_combination),
+      outcome = rbinom(n = n(),size = 1,prob = Y_probs)
+    )
+}
+
+simulate_multiple_datasets <- function(n,sigma,n_simulations,simulate_function,...){
   is_cov_matrix_valid <- all(eigen(sigma)$values != 0)
   stopifnot("Error: supplied covariance matrix must be nonsingular" = is_cov_matrix_valid)
 
   purrr::map(
     .x = seq(1,n_simulations),
-    .f = ~ simulate_linear_model(
+    .f = \(i) simulate_function(
       n = n,
       sigma = sigma,
-      y_formula = {{y_formula}},
-      x_threshold = x_threshold,
-      epsilon_sd = epsilon_sd
+      ...
+      ) %>%
+      mutate(sim_id = i)
     ) %>%
-      mutate(sim_id = .x) %>%
-      relocate(sim_id)
-  ) %>%
     # Bind into dataframe and nest under sim_id so we can perform calculations for
     # each simulation easily
     bind_rows() %>%
+    relocate(sim_id) %>%
     group_by(sim_id) %>%
     nest()
 }
@@ -101,33 +112,3 @@ summarize_coef_df <- function(coef_df,caption){
     janitor::clean_names(case = "sentence") %>%
     knitr::kable(caption = caption)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-#
-# Y = {{y_formula}},
-# Y_probs = plogis(Y),
-# outcome = rbinom(n = n(),size = 1,prob = Y_probs)
-#
-#
-#
-#
-# fit_models <- function(nested_sim_data,model_formula){
-#   nested_sim_data %>%
-#     # Fit logistic regression and save model + predicted probs
-#     mutate(
-#       fitted_model = map(data,~ glm(outcome ~ X + Z + W,family = binomial(link = "logit"),data = .x)),
-#       predicted_proba = map2(.x = data,.y = fitted_model,.f = ~ predict(.y,type = "response"))
-#     )
-# }
-
-# predicted_value = map2(.x = data,.y = fitted_model,.f = ~ predict(.y))
