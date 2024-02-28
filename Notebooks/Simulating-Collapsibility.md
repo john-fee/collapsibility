@@ -1,7 +1,7 @@
 Simulating collapsibility
 ================
 John Fee
-2024-02-27
+2024-02-28
 
 - [A linear model](#a-linear-model)
   - [Scenario 1 - No confounders](#scenario-1---no-confounders)
@@ -11,7 +11,7 @@ John Fee
     omitted](#scenario-3---confounders-present-prognostic-variable-omitted)
 - [A (non identity/log link) GLM - logistic
   regression](#a-non-identitylog-link-glm---logistic-regression)
-  - [Scenario 1 - no confounders](#scenario-1---no-confounders-1)
+  - [Scenario 1 - No confounders](#scenario-1---no-confounders-1)
   - [Scenario 2 - Confounders
     present](#scenario-2---confounders-present-1)
   - [Scenario 3 - Confounders present, prognostic variable
@@ -36,6 +36,7 @@ theme_set(cowplot::theme_cowplot())
 # Misc
 source(here("R","sim-functions.R"))
 set.seed(1)
+n_simulations = 1000
 ```
 
 I’m going to walk through a few different scenarios with different data
@@ -77,7 +78,7 @@ $$
 \end{aligned}
 $$
 
-This process is repeated until 1000 datasets of size $n = 500$ are
+This process is repeated until 1000 datasets of size 1,000 are
 generated. I then fit the same linear model to each simulated dataset,
 and plot the distribution of the results and provide a table of summary
 stats.
@@ -97,7 +98,7 @@ cov_matrix_diagonal <- matrix(
 results <- simulate_multiple_datasets(
   n = 500,
   sigma = cov_matrix_diagonal,
-  n_simulations = 1000,
+  n_simulations = n_simulations,
   simulate_function = simulate_linear_model,
   y_formula = 3*W + X + 1.5*Z,
   x_threshold = qnorm(0.5), # Chosen so X is a 50/50 split in both treatment groups
@@ -183,7 +184,7 @@ cov_matrix_confounding <- matrix(
 results <- simulate_multiple_datasets(
   n = 500,
   sigma = cov_matrix_confounding,
-  n_simulations = 1000,
+  n_simulations = n_simulations,
   simulate_function = simulate_linear_model,
   y_formula = 3*W + X + 1.5*Z,
   x_threshold = qnorm(0.5), # Chosen so X is a 50/50 split in both treatment groups
@@ -237,7 +238,7 @@ data.
 results <- simulate_multiple_datasets(
   n = 500,
   sigma = cov_matrix_confounding,
-  n_simulations = 1000,
+  n_simulations = n_simulations,
   simulate_function = simulate_linear_model,
   y_formula = 3*W + X + 1.5*Z,
   x_threshold = qnorm(0.5), # Chosen so X is a 50/50 split in both treatment groups
@@ -281,7 +282,7 @@ and log link functions, as we shall see in the following sections.
 
 # A (non identity/log link) GLM - logistic regression
 
-## Scenario 1 - no confounders
+## Scenario 1 - No confounders
 
 For this section, I’m going to modify our DGP to be compatible with a
 different type of model. Assume that I observe the values of a
@@ -315,7 +316,7 @@ $$
 \begin{aligned}
   A &= X + 3W + 1.5Z\\
   Y_{prob} &= \frac{1}{1 + \exp{A}}\\
-  Y &= \text{Bernoulli}(Y_{prob})
+  Y &\sim \text{Bernoulli}(Y_{prob})
 \end{aligned}
 $$
 
@@ -323,7 +324,7 @@ $$
 results <- simulate_multiple_datasets(
   n = 500,
   sigma = cov_matrix_diagonal,
-  n_simulations = 1000,
+  n_simulations = n_simulations,
   simulate_function = simulate_logistic_reg_model,
   y_formula = 3*W + X + 1.5*Z,
   x_threshold = qnorm(0.5) # Chosen so X is a 50/50 split in both treatment groups
@@ -390,7 +391,7 @@ dagify(
 results <- simulate_multiple_datasets(
   n = 500,
   sigma = cov_matrix_confounding,
-  n_simulations = 1000,
+  n_simulations = n_simulations,
   simulate_function = simulate_logistic_reg_model,
   y_formula = 3*W + X + 1.5*Z,
   x_threshold = qnorm(0.5) # Chosen so X is a 50/50 split in both treatment groups
@@ -441,7 +442,7 @@ Now I remove $W$ from the model fitting.
 results <- simulate_multiple_datasets(
   n = 500,
   sigma = cov_matrix_confounding,
-  n_simulations = 1000,
+  n_simulations = n_simulations,
   simulate_function = simulate_logistic_reg_model,
   y_formula = 3*W + X + 1.5*Z,
   x_threshold = qnorm(0.5) # Chosen so X is a 50/50 split in both treatment groups
@@ -468,7 +469,7 @@ plot_coefficient_distribution(
 
 ``` r
 coef_df %>%
-  summarize_coef_df(caption = "Summary table for parameters of $n = 1000$ logistic GLMs fit on simulated data with confounders")
+  summarize_coef_df(caption = "Summary table for parameters of $n = 1000$ logistic GLMs fit on simulated data with confounders and prognostic variable omitted.")
 ```
 
 | Variable    | Parameter estimate | True value |       Bias |
@@ -478,6 +479,6 @@ coef_df %>%
 | Z           |          0.4046214 |        1.5 | -1.0953786 |
 
 Summary table for parameters of $n = 1000$ logistic GLMs fit on
-simulated data with confounders
+simulated data with confounders and prognostic variable omitted.
 
 The estimated coefficients are now way off (and in the wrong direction)!
