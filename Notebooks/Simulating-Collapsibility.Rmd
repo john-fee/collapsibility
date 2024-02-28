@@ -30,6 +30,7 @@ library(tidyr)
 
 # Graphics
 library(ggplot2)
+
 library(ggdag)
 library(dagitty)
 library(latex2exp)
@@ -38,7 +39,7 @@ theme_set(cowplot::theme_cowplot())
 # Misc
 source(here("R","sim-functions.R"))
 set.seed(1)
-n_simulations = 1000
+n_simulations = 2000
 ```
 
 I'm going to walk through a few different scenarios with different data generating processes, and via simulation examine how well I can recover the true value of the parameter of interest.
@@ -200,7 +201,7 @@ results <- simulate_multiple_datasets(
 ```
 
 ```{r}
-coef_df <- coef_df <- true_coefs %>%
+coef_df <- true_coefs %>%
   get_coef_df(results,.)
 
 plot_coefficient_distribution(
@@ -264,7 +265,7 @@ results <- simulate_multiple_datasets(
  
  
 ```{r}
-coef_df <- coef_df <- true_coefs %>%
+coef_df <- true_coefs %>%
   get_coef_df(results,.)
 
 plot_coefficient_distribution(
@@ -314,7 +315,7 @@ results <- simulate_multiple_datasets(
  
  
 ```{r}
-coef_df <- coef_df <- true_coefs %>%
+coef_df <- true_coefs %>%
   get_coef_df(results,.)
 
 plot_coefficient_distribution(
@@ -354,7 +355,7 @@ results <- simulate_multiple_datasets(
  
  
 ```{r}
-coef_df <- coef_df <- true_coefs %>%
+coef_df <- true_coefs %>%
   get_coef_df(results,.)
 
 plot_coefficient_distribution(
@@ -369,4 +370,4 @@ coef_df %>%
   summarize_coef_df(caption = "Summary table for parameters of $n = 1000$ logistic GLMs fit on simulated data with confounders and prognostic variable omitted.")
 ```
 
-The estimated coefficients are now way off (and in the wrong direction)!
+The estimated coefficients are now way off, even though we conditioned on the only confounder!  The non-collapsibility of logistic regression implies that we need to condition on all variables that contribute to variation in $Y$.

@@ -36,7 +36,7 @@ theme_set(cowplot::theme_cowplot())
 # Misc
 source(here("R","sim-functions.R"))
 set.seed(1)
-n_simulations = 1000
+n_simulations = 2000
 ```
 
 I’m going to walk through a few different scenarios with different data
@@ -78,7 +78,7 @@ $$
 \end{aligned}
 $$
 
-This process is repeated until 1000 datasets of size 1,000 are
+This process is repeated until 1000 datasets of size 2,000 are
 generated. I then fit the same linear model to each simulated dataset,
 and plot the distribution of the results and provide a table of summary
 stats.
@@ -133,10 +133,10 @@ coef_df %>%
 
 | Variable    | Parameter estimate | True value |       Bias |
 |:------------|-------------------:|-----------:|-----------:|
-| (Intercept) |          0.0023046 |        0.0 |  0.0023046 |
-| W           |          2.9840192 |        3.0 | -0.0159808 |
-| X           |          1.0034573 |        1.0 |  0.0034573 |
-| Z           |          1.4959494 |        1.5 | -0.0040506 |
+| (Intercept) |         -0.0006715 |        0.0 | -0.0006715 |
+| W           |          2.9863047 |        3.0 | -0.0136953 |
+| X           |          1.0019431 |        1.0 |  0.0019431 |
+| Z           |          1.5033687 |        1.5 |  0.0033687 |
 
 Summary table for parameters of $n = 1000$ linear models fit on
 simulated data
@@ -214,10 +214,10 @@ coef_df %>%
 
 | Variable    | Parameter estimate | True value |       Bias |
 |:------------|-------------------:|-----------:|-----------:|
-| (Intercept) |          0.0333366 |        0.0 |  0.0333366 |
-| W           |          2.9993847 |        3.0 | -0.0006153 |
-| X           |          0.9296940 |        1.0 | -0.0703060 |
-| Z           |          1.5169205 |        1.5 |  0.0169205 |
+| (Intercept) |          0.0118017 |        0.0 |  0.0118017 |
+| W           |          2.9995821 |        3.0 | -0.0004179 |
+| X           |          1.0079182 |        1.0 |  0.0079182 |
+| Z           |          1.4907873 |        1.5 | -0.0092127 |
 
 Summary table for parameters of $n = 1000$ linear models fit on
 simulated data with confounder
@@ -250,7 +250,7 @@ results <- simulate_multiple_datasets(
 ```
 
 ``` r
-coef_df <- coef_df <- true_coefs %>%
+coef_df <- true_coefs %>%
   get_coef_df(results,.)
 
 plot_coefficient_distribution(
@@ -269,9 +269,9 @@ coef_df %>%
 
 | Variable    | Parameter estimate | True value |       Bias |
 |:------------|-------------------:|-----------:|-----------:|
-| (Intercept) |         -0.0118844 |        0.0 | -0.0118844 |
-| X           |          1.0254737 |        1.0 |  0.0254737 |
-| Z           |          1.4841530 |        1.5 | -0.0158470 |
+| (Intercept) |          0.0171784 |        0.0 |  0.0171784 |
+| X           |          0.9880821 |        1.0 | -0.0119179 |
+| Z           |          1.5011808 |        1.5 |  0.0011808 |
 
 Summary table for parameters of $n = 1000$ linear models fit on
 simulated data with confounder present and prognostic variable omitted
@@ -338,7 +338,7 @@ results <- simulate_multiple_datasets(
 ```
 
 ``` r
-coef_df <- coef_df <- true_coefs %>%
+coef_df <- true_coefs %>%
   get_coef_df(results,.)
 
 plot_coefficient_distribution(
@@ -354,12 +354,12 @@ coef_df %>%
   summarize_coef_df(caption = "Summary table for parameters of $n = 1000$ logistic GLMs fit on simulated data")
 ```
 
-| Variable    | Parameter estimate | True value |       Bias |
-|:------------|-------------------:|-----------:|-----------:|
-| (Intercept) |         -0.0010008 |        0.0 | -0.0010008 |
-| W           |          3.0953580 |        3.0 |  0.0953580 |
-| X           |          1.0539721 |        1.0 |  0.0539721 |
-| Z           |          1.5498684 |        1.5 |  0.0498684 |
+| Variable    | Parameter estimate | True value |      Bias |
+|:------------|-------------------:|-----------:|----------:|
+| (Intercept) |          0.0018037 |        0.0 | 0.0018037 |
+| W           |          3.1080864 |        3.0 | 0.1080864 |
+| X           |          1.0384740 |        1.0 | 0.0384740 |
+| Z           |          1.5562909 |        1.5 | 0.0562909 |
 
 Summary table for parameters of $n = 1000$ logistic GLMs fit on
 simulated data
@@ -405,7 +405,7 @@ results <- simulate_multiple_datasets(
 ```
 
 ``` r
-coef_df <- coef_df <- true_coefs %>%
+coef_df <- true_coefs %>%
   get_coef_df(results,.)
 
 plot_coefficient_distribution(
@@ -421,12 +421,12 @@ coef_df %>%
   summarize_coef_df(caption = "Summary table for parameters of $n = 1000$ logistic GLMs fit on simulated data with confounders")
 ```
 
-| Variable    | Parameter estimate | True value |       Bias |
-|:------------|-------------------:|-----------:|-----------:|
-| (Intercept) |         -0.0118677 |        0.0 | -0.0118677 |
-| W           |          3.1185125 |        3.0 |  0.1185125 |
-| X           |          1.0791976 |        1.0 |  0.0791976 |
-| Z           |          1.5507121 |        1.5 |  0.0507121 |
+| Variable    | Parameter estimate | True value |      Bias |
+|:------------|-------------------:|-----------:|----------:|
+| (Intercept) |          0.0026718 |        0.0 | 0.0026718 |
+| W           |          3.1079115 |        3.0 | 0.1079115 |
+| X           |          1.0269148 |        1.0 | 0.0269148 |
+| Z           |          1.5506238 |        1.5 | 0.0506238 |
 
 Summary table for parameters of $n = 1000$ logistic GLMs fit on
 simulated data with confounders
@@ -456,7 +456,7 @@ results <- simulate_multiple_datasets(
 ```
 
 ``` r
-coef_df <- coef_df <- true_coefs %>%
+coef_df <- true_coefs %>%
   get_coef_df(results,.)
 
 plot_coefficient_distribution(
@@ -474,11 +474,14 @@ coef_df %>%
 
 | Variable    | Parameter estimate | True value |       Bias |
 |:------------|-------------------:|-----------:|-----------:|
-| (Intercept) |          0.0064395 |        0.0 |  0.0064395 |
-| X           |          0.2457032 |        1.0 | -0.7542968 |
-| Z           |          0.4046214 |        1.5 | -1.0953786 |
+| (Intercept) |          0.0038391 |        0.0 |  0.0038391 |
+| X           |          0.2542688 |        1.0 | -0.7457312 |
+| Z           |          0.3978926 |        1.5 | -1.1021074 |
 
 Summary table for parameters of $n = 1000$ logistic GLMs fit on
 simulated data with confounders and prognostic variable omitted.
 
-The estimated coefficients are now way off (and in the wrong direction)!
+The estimated coefficients are now way off, even though we conditioned
+on the only confounder! The non-collapsibility of logistic regression
+implies that we need to condition on all variables that contribute to
+variation in $Y$.
